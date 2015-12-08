@@ -17,7 +17,7 @@ function(configure_exec_targets)
 
     if(NOT CET_SOURCE_DIR)
         set(EXEC_TARGETS_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR} PARENT_SCOPE)
-    else
+    else()
         set(EXEC_TARGETS_SOURCE_DIR ${CET_SOURCE_DIR} PARENT_SCOPE)
     endif()
 
