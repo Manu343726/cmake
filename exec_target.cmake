@@ -2,14 +2,20 @@ include(CMakeParseArguments)
 
 function(__print_exec_targets_config)
 
-    message(STATUS "exec_target() configured:")
+    message(STATUS "exec_target '${ET_NAME}' configured:")
     message(STATUS "=========================")
     message(STATUS " - PROJECT: ${EXEC_TARGETS_PROJECT}")
     message(STATUS " - SOURCE DIR: ${EXEC_TARGETS_SOURCE_DIR}")
     message(STATUS " - SRC DIR: ${EXEC_TARGETS_SRC_DIR}")
     message(STATUS " - INCLUDE DIR: ${EXEC_TARGETS_INCLUDE_DIR}")
     message(STATUS " - TEST DIR: ${EXEC_TARGETS_TEST_DIR}")
+    message(STATUS " - PREFIX: ${ET_PREFIX}")
+    message(STATUS " - TARGET: ${ET_PREFIX}_${ET_NAME}")
 
+    get_target_property(options ${ET_PREFIX}_${ET_NAME} COMPILE_OPTIONS)
+    string(REGEX REPLACE ";" " " options ${options})
+
+    message(STATUS " - COMPILE OPTIONS: ${options}")
 endfunction()
 
 function(configure_exec_targets)
@@ -55,13 +61,11 @@ function(configure_exec_targets)
 
 endfunction()
 
-function(exec_target)
+macro(parse_exec_target_args)
     set(options)
-    set(oneValueArgs NAME PREFIX)
+    set(oneValueArgs NAME PREFIX TARGET_OUT)
     set(multiValueArgs COMPILE_OPTIONS)
     cmake_parse_arguments(ET "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
-
-    __print_exec_targets_config()
 
     if(NOT ET_NAME)
         message(FATAL_ERROR "No NAME specified for exec_target()")
@@ -71,6 +75,10 @@ function(exec_target)
         message(FATAL_ERROR "No PREFIX specified for exec_target()")
     endif()
 
+endmacro()
+
+function(exec_target)
+    parse_exec_target_args(${ARGN})
 
     # To see the headers in the solution...
     if(MSVC)
@@ -96,4 +104,23 @@ function(exec_target)
         ${EXEC_TARGETS_INCLUDE_DIR}
         ${EXEC_TARGETS_SOURCE_DIR}/${ET_PREFIX}/include/ # examples/tests extra includes
     )
+
+    if(ET_TARGET_OUT)
+        set(${ET_TARGET_OUT} ${ET_PREFIX}_${ET_NAME} PARENT_SCOPE)
+    endif()
+
+    __print_exec_targets_config()
+endfunction()
+
+function(test_target)
+    parse_exec_target_args(${ARGN} PREFIX test)
+
+    if(NOT ET_TARGET_OUT)
+        exec_target(${ARGN} PREFIX test TARGET_OUT __exec_target)
+    else()
+        exec_target(${ARGN} PREFIX test)
+        set(__exec_target ${${ET_TARGET_OUT}})
+    endif()
+    
+    add_test(NAME ${ET_NAME} COMMAND ${__exec_target})
 endfunction()
