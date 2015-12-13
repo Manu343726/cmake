@@ -53,12 +53,6 @@ function(install_gtestgmock)
         set(GMOCK_LIB_IMPORTED_LOCATION ${CMAKE_BUILD_TYPE}/gmock.lib)
         set(GTEST_MAIN_LIB_IMPORTED_LOCATION ${CMAKE_BUILD_TYPE}/gtest_main.lib)
         set(GMOCK_MAIN_LIB_IMPORTED_LOCATION ${CMAKE_BUILD_TYPE}/gmock_main.lib)
-
-        if(CMAKE_BUILD_TYPE MATCHES "Debug")
-            set(MSVC_CRT_DYNAMIC "/MDd")
-        else()
-            set(MSVC_CRT_DYNAMIC "/MD")
-        endif()
     else()
         set(GTEST_LIB_IMPORTED_LOCATION libgtest.a)
         set(GMOCK_LIB_IMPORTED_LOCATION libgmock.a)
@@ -81,7 +75,6 @@ function(install_gtestgmock)
         INSTALL_COMMAND ""
         CMAKE_ARGS -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
                -Dgtest_force_shared_crt=ON
-               ${MSVC_CRT_DYNAMIC}
     )
 
     # Create a libgtest target to be used as a dependency by test programs

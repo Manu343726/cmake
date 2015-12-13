@@ -83,11 +83,11 @@ function(exec_target)
     # To see the headers in the solution...
     if(MSVC)
         generate_vs_source_groups(${ET_PREFIX}s ${EXEC_TARGETS_SOURCE_DIR}/${ET_PREFIX}s ${ET_PREFIX}_files)
-        generate_vs_source_groups(include ${EXEC_TARGETS_INCLUDE_DIR} files)
+        generate_vs_source_groups(include ${EXEC_TARGETS_INCLUDE_DIR} headers)
     endif()
 
     add_executable(${ET_PREFIX}_${ET_NAME} ${EXEC_TARGETS_SOURCE_DIR}/${ET_PREFIX}s/${ET_NAME}.cpp
-        ${${ET_PREFIX}_files} ${files} ${ET_FILES}
+        ${headers} ${ET_FILES}
     )
 
     target_compile_options(${ET_PREFIX}_${ET_NAME} PRIVATE 
