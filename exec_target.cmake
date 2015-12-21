@@ -1,4 +1,5 @@
 include(CMakeParseArguments)
+include(cmake/generate_assembly)
 
 function(__print_exec_targets_config)
 
@@ -19,7 +20,7 @@ function(__print_exec_targets_config)
 endfunction()
 
 function(configure_exec_targets)
-    set(options)
+    set(options RUN_ALL)
     set(oneValueArgs PROJECT SOURCE_DIR SRC_DIR INCLUDE_DIR TEST_DIR)
     set(multiValueArgs)
     cmake_parse_arguments(CET "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
@@ -62,7 +63,7 @@ function(configure_exec_targets)
 endfunction()
 
 macro(parse_exec_target_args)
-    set(options)
+    set(options RUN ASSEMBLY)
     set(oneValueArgs NAME PREFIX TARGET_OUT)
     set(multiValueArgs COMPILE_OPTIONS)
     cmake_parse_arguments(ET "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
@@ -74,7 +75,6 @@ macro(parse_exec_target_args)
     if(NOT ET_PREFIX)
         message(FATAL_ERROR "No PREFIX specified for exec_target()")
     endif()
-
 endmacro()
 
 function(exec_target)
@@ -104,6 +104,35 @@ function(exec_target)
         ${EXEC_TARGETS_INCLUDE_DIR}
         ${EXEC_TARGETS_SOURCE_DIR}/${ET_PREFIX}/include/ # examples/tests extra includes
     )
+
+    if(ET_ASSEMBLY)
+        generate_assembly(TARGET ${ET_PREFIX}_${ET_NAME} FILE ${ET_NAME} PREFIX ${ET_PREFIX})
+    endif()
+
+    if(ET_RUN)
+        if(EXEC_TARGETS_RUN_ALL)
+            set(run_all ALL)
+        endif()
+
+        if(MSVC)
+            set(banner "===================================")
+        endif()
+
+        add_custom_target(
+            run_${ET_PREFIX}_${ET_NAME} ${run_all} 
+            COMMAND ${CMAKE_COMMAND} -E echo "${banner}"
+            COMMAND ${ET_PREFIX}_${ET_NAME} ${ET_RUN_ARGS}
+            COMMAND ${CMAKE_COMMAND} -E echo "${banner}"
+            DEPENDS ${ET_PREFIX}_${ET_NAME}
+            COMMENT "Running ${ET_NAME} ${ET_PREFIX}..."
+        )
+
+        if(NOT (TARGET run_${EXEC_TARGETS_PROJECT}))
+            add_custom_target(run_${EXEC_TARGETS_PROJECT})
+        endif()
+
+        add_dependencies(run_${EXEC_TARGETS_PROJECT} run_${ET_PREFIX}_${ET_NAME})
+    endif()
 
     if(ET_TARGET_OUT)
         set(${ET_TARGET_OUT} ${ET_PREFIX}_${ET_NAME} PARENT_SCOPE)
