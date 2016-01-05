@@ -73,7 +73,7 @@ function(install_gtestgmock)
         PREFIX ${CMAKE_CURRENT_BINARY_DIR}/gtest
         # Disable install step
         INSTALL_COMMAND ""
-        CMAKE_ARGS -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+        CMAKE_ARGS -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
                -Dgtest_force_shared_crt=ON
     )
 
@@ -105,7 +105,7 @@ function(install_gtestgmock)
         PREFIX ${CMAKE_CURRENT_BINARY_DIR}/gmock
         # Disable install step
         INSTALL_COMMAND ""
-        CMAKE_ARGS -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+        CMAKE_ARGS -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
                -Dgtest_force_shared_crt=ON
                ${MSVC_CRT_DYNAMIC}
     )
@@ -135,6 +135,8 @@ function(install_gtestgmock)
     set(GMOCK_LIB_TARGET ${_GMOCK_LIB_TARGET} PARENT_SCOPE)
     set(GTEST_MAIN_TARGET ${_GTEST_MAIN_TARGET} PARENT_SCOPE)
     set(GMOCK_MAIN_TARGET ${_GMOCK_MAIN_TARGET} PARENT_SCOPE)
+
+    add_dependencies(gmock gtest)
 endfunction()
 
 include(${CMAKE_CURRENT_LIST_DIR}/exec_target.cmake)
