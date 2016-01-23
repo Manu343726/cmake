@@ -2,21 +2,7 @@ include(CMakeParseArguments)
 include(cmake/generate_assembly)
 
 function(__print_exec_targets_config)
-
-    message(STATUS "exec_target '${ET_NAME}' configured:")
-    message(STATUS "=========================")
-    message(STATUS " - PROJECT: ${EXEC_TARGETS_PROJECT}")
-    message(STATUS " - SOURCE DIR: ${EXEC_TARGETS_SOURCE_DIR}")
-    message(STATUS " - SRC DIR: ${EXEC_TARGETS_SRC_DIR}")
-    message(STATUS " - INCLUDE DIR: ${EXEC_TARGETS_INCLUDE_DIR}")
-    message(STATUS " - TEST DIR: ${EXEC_TARGETS_TEST_DIR}")
-    message(STATUS " - PREFIX: ${ET_PREFIX}")
-    message(STATUS " - TARGET: ${ET_PREFIX}_${ET_NAME}")
-
-    get_target_property(options ${ET_PREFIX}_${ET_NAME} COMPILE_OPTIONS)
-    string(REGEX REPLACE ";" " " options ${options})
-
-    message(STATUS " - COMPILE OPTIONS: ${options}")
+    message(STATUS "Executable target '${ET_PREFIX}_${ET_NAME}' (from ${ET_PREFIX}s/${ET_NAME}${ET_EXT})")
 endfunction()
 
 function(configure_exec_targets)
@@ -64,12 +50,16 @@ endfunction()
 
 macro(parse_exec_target_args)
     set(options RUN ASSEMBLY)
-    set(oneValueArgs NAME PREFIX TARGET_OUT)
+    set(oneValueArgs NAME PREFIX TARGET_OUT EXT)
     set(multiValueArgs COMPILE_OPTIONS)
     cmake_parse_arguments(ET "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
     if(NOT ET_NAME)
         message(FATAL_ERROR "No NAME specified for exec_target()")
+    endif()
+
+    if(NOT ET_EXT)
+        set(ET_EXT .cpp)
     endif()
 
     if(NOT ET_PREFIX)
@@ -86,7 +76,7 @@ function(exec_target)
         generate_vs_source_groups(include ${EXEC_TARGETS_INCLUDE_DIR} headers)
     endif()
 
-    add_executable(${ET_PREFIX}_${ET_NAME} ${EXEC_TARGETS_SOURCE_DIR}/${ET_PREFIX}s/${ET_NAME}.cpp
+    add_executable(${ET_PREFIX}_${ET_NAME} ${EXEC_TARGETS_SOURCE_DIR}/${ET_PREFIX}s/${ET_NAME}${ET_EXT}
         ${headers} ${ET_FILES}
     )
 
