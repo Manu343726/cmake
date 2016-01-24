@@ -1,5 +1,6 @@
 include(CMakeParseArguments)
 include(cmake/generate_assembly)
+include(cmake/custom_properties)
 
 function(__print_exec_targets_config)
     message(STATUS "Executable target '${ET_PREFIX}_${ET_NAME}' (from ${ET_PREFIX}s/${ET_NAME}${ET_EXT})")
@@ -74,6 +75,10 @@ function(exec_target)
     if(MSVC)
         generate_vs_source_groups(${ET_PREFIX}s ${EXEC_TARGETS_SOURCE_DIR}/${ET_PREFIX}s ${ET_PREFIX}_files)
         generate_vs_source_groups(include ${EXEC_TARGETS_INCLUDE_DIR} headers)
+
+        foreach(header ${headers})
+            set_source_file_custom_property("${header}" VS_SOURCEGROUPS_HEADER TRUE)
+        endforeach()
     endif()
 
     add_executable(${ET_PREFIX}_${ET_NAME} ${EXEC_TARGETS_SOURCE_DIR}/${ET_PREFIX}s/${ET_NAME}${ET_EXT}
