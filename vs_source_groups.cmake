@@ -1,3 +1,4 @@
+include(cmake/custom_properties)
 
 function(_generate_vs_source_groups GROUP_NAME TOP_DIRECTORY CURRENT_SUBDIRECTORY RESULT_FILES)
 
@@ -16,8 +17,13 @@ function(_generate_vs_source_groups GROUP_NAME TOP_DIRECTORY CURRENT_SUBDIRECTOR
     )
 
     string(REPLACE "/" "\\" subgroups "${CURRENT_SUBDIRECTORY}")
+    set(source_group "${GROUP_NAME}\\${subgroups}")
 
-    source_group("${GROUP_NAME}\\${subgroups}" FILES ${headers} ${sources})
+    source_group("${source_group}" FILES ${headers} ${sources})
+
+    foreach(file ${headers} ${sources})
+        set_source_file_custom_property(${file} VS_SOURCE_GROUP "${source_group}")
+    endif()
 
     list(APPEND result_files ${headers} ${sources})
 
