@@ -97,7 +97,8 @@ function(exec_target)
 
     target_include_directories(${ET_PREFIX}_${ET_NAME} PRIVATE 
         ${EXEC_TARGETS_INCLUDE_DIR}
-        ${EXEC_TARGETS_SOURCE_DIR}/${ET_PREFIX}/include/ # examples/tests extra includes
+        ${EXEC_TARGETS_SOURCE_DIR}/${ET_PREFIX}s
+        ${EXEC_TARGETS_SOURCE_DIR}/${ET_PREFIX}s/include/ # examples/tests extra includes
     )
 
     if(ET_ASSEMBLY)
