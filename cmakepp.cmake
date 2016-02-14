@@ -35856,7 +35856,7 @@ endfunction()
     fwrite_temp("
       @echo off
       cd \"${working_directory}\"
-      wmic process get parentprocessid,name|find \"WMIC\" > ${pidfile}
+      wmic process get parentprocessid,name|grep \"WMIC.exe\" > ${pidfile}
       ${command_string} > ${outputfile} 2> ${errorfile}
       echo %errorlevel% > ${returncodefile}
       exit
