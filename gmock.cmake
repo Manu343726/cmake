@@ -27,19 +27,28 @@ function(install_gtestgmock)
     endif()
 
     if(NOT _GTEST_LIB_TARGET)
-        set(_GTEST_LIB_TARGET libgtest)
+        set(_GTEST_LIB_TARGET libgtest_v${_VERSION})
     endif()
 
     if(NOT _GMOCK_LIB_TARGET)
-        set(_GMOCK_LIB_TARGET libgmock)
+        set(_GMOCK_LIB_TARGET libgmock_v${_VERSION})
     endif()
 
     if(NOT _GTEST_MAIN_TARGET)
-        set(_GTEST_MAIN_TARGET libgtest_main)
+        set(_GTEST_MAIN_TARGET libgtest_main_v${_VERSION})
     endif()
 
     if(NOT _GMOCK_MAIN_TARGET)
-        set(_GMOCK_MAIN_TARGET libgmock_main)
+        set(_GMOCK_MAIN_TARGET libgmock_main_v${_VERSION})
+    endif()
+
+    if(TARGET ${_GMOCK_LIB_TARGET})
+        set(GTEST_LIB_TARGET ${_GTEST_LIB_TARGET} PARENT_SCOPE)
+        set(GMOCK_LIB_TARGET ${_GMOCK_LIB_TARGET} PARENT_SCOPE)
+        set(GTEST_MAIN_TARGET ${_GTEST_MAIN_TARGET} PARENT_SCOPE)
+        set(GMOCK_MAIN_TARGET ${_GMOCK_MAIN_TARGET} PARENT_SCOPE)
+    
+        return()
     endif()
 
     if(MSVC)
@@ -59,6 +68,8 @@ function(install_gtestgmock)
         set(GTEST_MAIN_LIB_IMPORTED_LOCATION libgtest_main.a)
         set(GMOCK_MAIN_LIB_IMPORTED_LOCATION libgmock_main.a)
     endif()
+
+    message(STATUS "Setting up gmock ${_VERSION}...")
 
     # We need thread support
     find_package(Threads REQUIRED)
@@ -111,25 +122,28 @@ function(install_gtestgmock)
     )
 
     # Create a libgmock target to be used as a dependency by test programs
-    add_library(${_GMOCK_LIB_TARGET} IMPORTED STATIC GLOBAL)
-    add_dependencies(${_GMOCK_LIB_TARGET} gmock)
+    add_library(gmock_imported IMPORTED STATIC GLOBAL)
+    add_dependencies(gmock_imported gmock)
 
     # Set gmock properties
     ExternalProject_Get_Property(gmock source_dir binary_dir)
-    set_target_properties(${_GMOCK_LIB_TARGET} PROPERTIES
+    set_target_properties(gmock_imported PROPERTIES
         "IMPORTED_LOCATION" "${binary_dir}/${GMOCK_LIB_IMPORTED_LOCATION}"
         "IMPORTED_LINK_INTERFACE_LIBRARIES" "${CMAKE_THREAD_LIBS_INIT}"
-        #    "INTERFACE_INCLUDE_DIRECTORIES" "${source_dir}/include"
+        "INTERFACE_INCLUDE_DIRECTORIES" "${source_dir}/include"
     )
-    # I couldn't make it work with INTERFACE_INCLUDE_DIRECTORIES
-    include_directories("${source_dir}/include")
 
     # Create GMock default main library
-    add_library(${_GMOCK_MAIN_TARGET} IMPORTED STATIC GLOBAL)
-    set_target_properties(${_GMOCK_MAIN_TARGET} PROPERTIES
+    add_library(gmock_main_imported IMPORTED STATIC GLOBAL)
+    set_target_properties(gmock_main_imported PROPERTIES
         "IMPORTED_LOCATION" "${binary_dir}/${GMOCK_MAIN_LIB_IMPORTED_LOCATION}"
         IMPORTED_LINK_INTERFACE_LIBRARIES ${_GMOCK_LIB_TARGET}
     )
+
+    add_library(${_GMOCK_LIB_TARGET} INTERFACE)
+    target_link_libraries(${_GMOCK_LIB_TARGET} INTERFACE gmock_imported)
+    add_library(${_GMOCK_MAIN_TARGET} INTERFACE)
+    target_link_libraries(${_GMOCK_MAIN_TARGET}  INTERFACE gmock_main_imported)
 
     set(GTEST_LIB_TARGET ${_GTEST_LIB_TARGET} PARENT_SCOPE)
     set(GMOCK_LIB_TARGET ${_GMOCK_LIB_TARGET} PARENT_SCOPE)
