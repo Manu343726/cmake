@@ -79,39 +79,47 @@ function(install_gtestgmock)
 
     # Download and install GoogleTest
     ExternalProject_Add(
-        gtest
+        gtest_external_project
         URL ${_GTEST_BASE_URL}/gtest-${_VERSION}${_EXT}
         PREFIX ${CMAKE_CURRENT_BINARY_DIR}/gtest
         # Disable install step
         INSTALL_COMMAND ""
         CMAKE_ARGS -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
                -Dgtest_force_shared_crt=ON
+        EXCLUDE_FROM_ALL TRUE
     )
 
     # Create a libgtest target to be used as a dependency by test programs
-    add_library(${_GTEST_LIB_TARGET} IMPORTED STATIC GLOBAL)
-    add_dependencies(${_GTEST_LIB_TARGET} gtest)
+    add_library(gtest_imported IMPORTED STATIC GLOBAL)
+    add_dependencies(gtest_imported gtest_external_project)
+
 
     # Set gtest properties
-    ExternalProject_Get_Property(gtest source_dir binary_dir)
-    set_target_properties(${_GTEST_LIB_TARGET} PROPERTIES
+    ExternalProject_Get_Property(gtest_external_project source_dir binary_dir)
+    set_target_properties(gtest_imported PROPERTIES
         "IMPORTED_LOCATION" "${binary_dir}/${GTEST_LIB_IMPORTED_LOCATION}"
         "IMPORTED_LINK_INTERFACE_LIBRARIES" "${CMAKE_THREAD_LIBS_INIT}"
-        #    "INTERFACE_INCLUDE_DIRECTORIES" "${source_dir}/include"
+        "INTERFACE_INCLUDE_DIRECTORIES" "${source_dir}/include"
+        EXCLUDE_FROM_ALL TRUE
     )
-    # I couldn't make it work with INTERFACE_INCLUDE_DIRECTORIES
-    include_directories("${source_dir}/include")
 
     # Create GTest default main library
-    add_library(${_GTEST_MAIN_TARGET} IMPORTED STATIC GLOBAL)
-    set_target_properties(${_GTEST_MAIN_TARGET} PROPERTIES
+    add_library(gtest_main_imported IMPORTED STATIC GLOBAL)
+    set_target_properties(gtest_main_imported PROPERTIES
         "IMPORTED_LOCATION" "${binary_dir}/${GTEST_MAIN_LIB_IMPORTED_LOCATION}"
         IMPORTED_LINK_INTERFACE_LIBRARIES ${_GTEST_LIB_TARGET}
+        EXCLUDE_FROM_ALL TRUE
     )
+
+    add_library(${_GTEST_LIB_TARGET} INTERFACE)
+    target_link_libraries(${_GTEST_LIB_TARGET} INTERFACE gtest_imported)
+    add_library(${_GTEST_MAIN_TARGET} INTERFACE)
+    target_link_libraries(${_GTEST_MAIN_TARGET} INTERFACE gtest_main_imported)
+
 
     # Download and install GoogleMock
     ExternalProject_Add(
-        gmock
+        gmock_external_project
         URL ${_GMOCK_BASE_URL}/gmock-${_VERSION}${_EXT}
         PREFIX ${CMAKE_CURRENT_BINARY_DIR}/gmock
         # Disable install step
@@ -119,18 +127,20 @@ function(install_gtestgmock)
         CMAKE_ARGS -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
                -Dgtest_force_shared_crt=ON
                ${MSVC_CRT_DYNAMIC}
+        EXCLUDE_FROM_ALL TRUE
     )
 
     # Create a libgmock target to be used as a dependency by test programs
     add_library(gmock_imported IMPORTED STATIC GLOBAL)
-    add_dependencies(gmock_imported gmock)
+    add_dependencies(gmock_imported gmock_external_project)
 
     # Set gmock properties
-    ExternalProject_Get_Property(gmock source_dir binary_dir)
+    ExternalProject_Get_Property(gmock_external_project source_dir binary_dir)
     set_target_properties(gmock_imported PROPERTIES
         "IMPORTED_LOCATION" "${binary_dir}/${GMOCK_LIB_IMPORTED_LOCATION}"
         "IMPORTED_LINK_INTERFACE_LIBRARIES" "${CMAKE_THREAD_LIBS_INIT}"
         "INTERFACE_INCLUDE_DIRECTORIES" "${source_dir}/include"
+        EXCLUDE_FROM_ALL TRUE
     )
 
     # Create GMock default main library
@@ -150,7 +160,7 @@ function(install_gtestgmock)
     set(GTEST_MAIN_TARGET ${_GTEST_MAIN_TARGET} PARENT_SCOPE)
     set(GMOCK_MAIN_TARGET ${_GMOCK_MAIN_TARGET} PARENT_SCOPE)
 
-    add_dependencies(gmock gtest)
+    target_link_libraries(${_GMOCK_LIB_TARGET} INTERFACE ${_GTEST_LIB_TARGET})
 endfunction()
 
 include(${CMAKE_CURRENT_LIST_DIR}/exec_target.cmake)
